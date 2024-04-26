@@ -2,8 +2,8 @@
 
 # File Transfer Protocol menggunakan Socket Programming
 
-## Nama: [Anggita Rachmadinda Putri]
-## NIM: [Nim 1203220086]
+## Nama: Anggita Rachmadinda Putri
+## NIM: Nim 1203220086
 
 ### Penjelasan
 Program ini adalah implementasi sederhana dari File Transfer Protocol (FTP) menggunakan socket programming dengan Python. FTP ini memungkinkan klien untuk berinteraksi dengan server menggunakan beberapa perintah, seperti:
