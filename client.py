@@ -1,33 +1,23 @@
 import socket
 
-def main():
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(('localhost', 12345))
+def run_client():
+    SERVER_HOST = '127.0.0.1'
+    SERVER_PORT = 12345
 
-    print("Koneksi berhasil. Ketik 'connme' untuk masuk ke dalam server.")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+        client_socket.connect((SERVER_HOST, SERVER_PORT))
+        print("Connected to server.")
 
-    while True:
-        command = input("Command: ")
+        while True:
+            user_input = input("Enter command: ")
 
-        client_socket.sendall(command.encode())
-        response = client_socket.recv(1024).decode()
+            if user_input.lower() == 'exit':
+                client_socket.sendall(user_input.encode('utf-8'))
+                break
 
-        if response == "disconnect":
-            print("Server memutus koneksi.")
-            break
-        elif response.startswith("File"):
-            print(response)
-            continue
-        elif response.startswith("Ukuran"):
-            print(response)
-            continue
-        elif response.startswith("Koneksi"):
-            print(response)
-            continue
-
-        print(response)
-
-    client_socket.close()
+            client_socket.sendall(user_input.encode('utf-8'))
+            server_response = client_socket.recv(1024).decode('utf-8')
+            print("Server response:", server_response)
 
 if __name__ == "__main__":
-    main()
+    run_client()
