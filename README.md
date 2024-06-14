@@ -219,3 +219,89 @@ if __name__ == "__main__":
     run_client()
 ```
 Program di atas adalah klien sederhana yang berkomunikasi dengan server menggunakan protokol TCP/IP melalui socket. Pertama, kita menentukan host dan port server yang akan dihubungi. Kemudian, kita membuat objek socket klien dan menghubungkannya ke server menggunakan metode connect(). Selanjutnya, program memasuki loop tak terbatas dimana pengguna diminta untuk memasukkan perintah. Perintah tersebut dikirim ke server menggunakan sendall(), dan kemudian program menunggu respon dari server menggunakan recv(). Respon dari server kemudian dicetak ke layar. Jika pengguna memasukkan perintah "exit", program akan mengirim perintah tersebut ke server dan keluar dari loop, sehingga koneksi dengan server ditutup.
+
+# Tugas Tambahan
+1. Modifikasi agar file yang diterima dimasukkan ke folder tertentu 
+2. Modifikasi program agar memberikan feedback nama file dan filesize yang diterima.
+3. Apa yang terjadi jika pengirim mengirimkan file dengan nama yang sama dengan file yang telah dikirim sebelumnya? Dapat menyebabkan masalah kah ? Lalu bagaimana solusinya? Implementasikan ke dalam program, solusi yang Anda berikan.
+
+## Server.py
+Berikut adalah codingan setelah dimodifikasi agar sesuai dengan soal tambahan
+``` sh
+def receive_file(client_conn, file_name, destination_dir='.'):
+    try:
+        destination_dir = os.path.abspath(destination_dir)
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
+        file_path = os.path.join(destination_dir, file_name)
+
+        # Check if file exists and create a new name if necessary
+        original_file_path = file_path
+        counter = 1
+        while os.path.exists(file_path):
+            file_base, file_ext = os.path.splitext(original_file_path)
+            file_path = f"{file_base}_{counter}{file_ext}"
+            counter += 1
+
+        with open(file_path, 'wb') as file:
+            while True:
+                chunk = client_conn.recv(1024)
+                if not chunk:
+                    break
+                file.write(chunk)
+
+        file_size = os.path.getsize(file_path)
+        return f"File {file_name} uploaded to {file_path} ({file_size} bytes)."
+    except Exception as e:
+        return f"Error uploading file {file_name}: {str(e)}"
+```
+Perubahan:
+Modifikasi Fungsi receive_file untuk Menentukan Direktori Tujuan dan Menangani Nama File yang Sama:
+1. Penambahan argumen destination_dir.
+2. Membuat direktori tujuan jika tidak ada.
+3. Logika untuk menambahkan postfix angka jika file dengan nama yang sama sudah ada.
+4. Memberikan feedback nama file dan ukuran file yang diterima.
+
+Modifikasi Proses Permintaan untuk Perintah upload (pada fungsi upload):
+
+```sh
+elif cmd == 'upload':
+    if len(args) < 2:
+        client_conn.sendall(b"Usage: upload [file_name] [destination_dir]")
+    else:
+        file_name = args[0]
+        destination_dir = args[1]
+        response = receive_file(client_conn, file_name, destination_dir)
+        client_conn.sendall(response.encode('utf-8'))
+```
+Perubahan:
+Menambahkan penanganan untuk argumen destination_dir.
+
+## Client.py
+Berikut adalah codingan setelah dimodifikasi agar sesuai dengan soal tambahan
+```sh
+if user_input.startswith("upload "):
+    parts = user_input.split()
+    if len(parts) < 3:
+        print("Usage: upload [file_name] [destination_dir]")
+        continue
+
+    file_name = parts[1]
+    destination_dir = parts[2]
+
+    try:
+        client_socket.sendall(user_input.encode('utf-8'))
+
+        with open(file_name, 'rb') as file:
+            while chunk := file.read(1024):
+                client_socket.sendall(chunk)
+
+        print(f"File {file_name} sent to server.")
+    except FileNotFoundError:
+        print(f"File {file_name} not found.")
+```
+Perubahan:
+Penanganan Perintah upload untuk Mengirim File ke Server dengan Direktori Tujuan:
+1. Memastikan perintah upload memiliki format yang benar.
+2. Mengirim file setelah memverifikasi perintah upload.
